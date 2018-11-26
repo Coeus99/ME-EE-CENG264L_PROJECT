@@ -1,0 +1,35 @@
+
+//Left cannon
+//////////////////////////
+if(is_clicked(SQUARE))
+	servo1.release()
+	servo1.wind()
+//////////////////////////
+
+//right cannon
+//////////////////////////
+if(is_clicked(CIRCLE))
+	servo2.release()
+	servo2.wind()
+/////////////////////////
+
+//laser
+/////////////////////////
+if(is_clicked(TRIANGLE))
+	then=millis()
+	laser.on()
+if millis()-then>1000 //laser is on or 1s
+	laser.off()
+/////////////////////////
+
+//locomotion
+////////////////////////////////
+new_speed = read_speed
+if(abs(new_speed-old_speed)>10)
+	reset_speed
+	idle = false
+
+if(new_speed == 0 && !idle)
+	set_motors(0)
+	idle = true
+///////////////////////////////
