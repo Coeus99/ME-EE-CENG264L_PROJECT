@@ -4,6 +4,13 @@
 if(is_clicked(SQUARE))
 	servo1.release()
 	servo1.wind()
+
+//min angle = 0
+//max angle = 100 (or 120 per VEX doc)
+
+//min PWM = 200
+//max PWN = 400
+//using Adafruit_PWMServoDriver.h
 //////////////////////////
 
 //right cannon
@@ -33,3 +40,13 @@ if(new_speed == 0 && !idle)
 	set_motors(0)
 	idle = true
 ///////////////////////////////
+
+//panel
+//////////////////////////////////////////
+if (hit)
+	if(++hits > 0)
+		if(hits > 1)
+			motors.lose_all
+		else
+			motor1.lose_half
+//////////////////////////////////////////
