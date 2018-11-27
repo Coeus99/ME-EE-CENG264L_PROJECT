@@ -52,7 +52,6 @@ PS4BT ps4( &btd );
 
 void setup()
 {
-  Serial.begin(9600);
   //Fix potential manufacturing defect on Sparkfun USB Hub:
   pinMode( 7, OUTPUT );
   digitalWrite( 7, HIGH );
