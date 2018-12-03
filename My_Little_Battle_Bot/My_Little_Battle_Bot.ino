@@ -48,6 +48,12 @@ BTD btd( &usb );
 PS4BT ps4( &btd );
 
 /**
+ * Pin assignments
+ */
+//button
+const uint8_t pin_button = 3;
+
+/**
  * Prototypes
  */
 void locomotion();
@@ -68,6 +74,11 @@ bool right_max = false;
 uint8_t prev_right_y = 0;
 uint8_t prev_left_y = 0;
 
+/**
+ * Hit counter
+ */
+ uint8_t hits = 0;
+
 void setup()
 {
   //Fix potential manufacturing defect on Sparkfun USB Hub:
@@ -86,6 +97,9 @@ void setup()
   //start servo driver
   servo_driver.begin();
   servo_driver.setPWMFreq(60);
+  
+  //set button as input
+  pinMode(pin_button, INPUT);
 }
 
 void loop()
@@ -241,5 +255,12 @@ void weapons()
 void panels()
 {
   //if panels is hit decrease speed
-  //if panels is hit twice cut speed
+  if (digitalRead())
+  {
+	  hits++;
+	  //switch(hits)
+	  //do speed reductions
+	  //reset timer
+  }
+  //if timer has exceeded heal time, heal hits
 }
