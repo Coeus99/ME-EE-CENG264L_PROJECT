@@ -124,6 +124,7 @@ void locomotion()
   }
   else if(left_y > 250)
   {
+    left_idle = false;
     if(!left_max)
     {
       left_max = true;
@@ -146,6 +147,7 @@ void locomotion()
   }
   else if(abs((int)left_y - (int)prev_left_y) > 10)
   {
+    left_idle = false;
     if ( left_y > 137 )
     {
       //Left side is in reverse
@@ -174,6 +176,7 @@ void locomotion()
   }
   else if(right_y > 250)
   {
+    right_idle = false;
     if(!right_max)
     {
       right_max = true;
@@ -196,6 +199,7 @@ void locomotion()
   }
   else if(abs((int)right_y - (int)prev_right_y) > 10)
   {
+    right_idle = false;
     if ( right_y > 137 )
     {
       //right side is in reverse
