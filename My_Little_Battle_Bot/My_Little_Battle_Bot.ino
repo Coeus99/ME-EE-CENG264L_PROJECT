@@ -131,7 +131,7 @@ void loop()
   //if controller is connected, run
   if( ps4.connected() )
   {
-    //check all applicable controls
+    //check all applicable actions
     locomotion();
     weapons();
     panels();
@@ -140,16 +140,19 @@ void loop()
 
 void locomotion()
 {
-  //get controller data
+  //some useful variables for setting speeds
   uint8_t right_y,left_y,right_speed,left_speed;
   bool left_reverse, right_reverse;
-
+  
+  //get analog stick input
   left_y = ps4.getAnalogHat(LeftHatY);
   right_y = ps4.getAnalogHat(RightHatY);
   
   //left side
+  //idle case
   if(117 < left_y && left_y < 137)
   {
+    //if the robot was previously idle, do nothing, else make it idle.
     if(!left_idle)
     {
       left_idle = true;
@@ -161,8 +164,10 @@ void locomotion()
       back_left->run(RELEASE);
     }
   }
+  //max speed case
   else if(left_y < 10)
   {
+    //if the robot was previousy at max speed, do nothing, else make it so.
     if(!left_max)
     {
       left_max = true;
@@ -179,6 +184,9 @@ void locomotion()
       }
     }
   }
+  //every other case
+  //if the analog value has changed *significantly, the update the motors accordingly
+  //if not, then don't change anything, the user won't notice ;)
   else if(abs((int)left_y - (int)prev_left_y) > 10)
   {
     left_idle = false;
@@ -205,7 +213,9 @@ void locomotion()
     prev_left_speed = left_speed;
   }
   prev_left_speed = left_speed;
+
   //right side
+  //for more information, see left side
   if(117 < right_y && right_y < 137)
   {
     if(!right_idle)
@@ -243,7 +253,6 @@ void locomotion()
     right_max = false;
     if ( right_y > 137 )
     {
-      //right side is in reverse
       right_speed = map( right_y, 138, 255, 0, 255 );
       front_right->setSpeed(right_speed*speed_ratio);
       back_right->setSpeed(right_speed*speed_ratio);
@@ -252,7 +261,6 @@ void locomotion()
     }
     else if ( right_y < 117 )
     {
-      //right side is forward
       right_speed = map( right_y, 116, 0, 0, 255 );
       front_right->setSpeed(right_speed*speed_ratio);
       back_right->setSpeed(right_speed*speed_ratio);
@@ -266,23 +274,27 @@ void locomotion()
 
 void weapons()
 {
+  //servo pulse information
   uint8_t pulse_up = map(30, min_position, max_position, SERVOMIN, SERVOMAX);
   uint8_t pulse_down = map(0, min_position, max_position, SERVOMIN, SERVOMAX);
-  //if square -> shoot left cannon
+
+  //square shoots right cannon
   if(ps4.getButtonClick(SQUARE))
   {
-    //to fire -> 60-90
+    //to fire turn 30 degrees
+    //(servo 0 should be on left side)
     servo_driver.setPWM(0,0,pulse_up);
     left_servo_last_t = millis();
   }
   if((millis() - left_servo_last_t ) > 1000)
   {
+    //reset servo after a second
     servo_driver.setPWM(0,0,pulse_down);
   }
-  //if circle -> shoot left cannon
+
+  //circle shoots left cannon
   if(ps4.getButtonClick(CIRCLE))
   {
-    //to fire -> 60-90
     servo_driver.setPWM(1,0,pulse_down);
     right_servo_last_t = millis();
   }
@@ -290,21 +302,28 @@ void weapons()
   {
     servo_driver.setPWM(1,0,pulse_up);
   }
-  //if triangle -> shoot laser for 1 second (use millis() timers), use flag
+
+  //triangle fires laser for a second
   if(ps4.getButtonClick(TRIANGLE))
   {
     laser_is_on = true;
     laser_start_t = millis();
     digitalWrite(pin_laser, LOW);
   }
-  //turn laser off if necessary
+  //if laser has been on or a second, turn it off
   if (laser_is_on && (millis() - laser_start_t > 1000))
   {
     digitalWrite(pin_laser, LOW);
     laser_is_on = false;
   }
   
-  //if right_trigger -> laser on
+  //if right_trigger -> laser on (maybe will add), psuedocode:
+  //if (laser isn't controlled from triangle)
+  //  if(trigger is down)
+  //    turn on laser
+  //  else
+  //    turn off laser
+  //(also use laser_is_on state so not digitalWriting constantly)
 }
 
 void panels()
@@ -312,6 +331,7 @@ void panels()
   //if panels is hit decrease speed
   if (digitalRead(pin_button))
   {
+    //got hit
     hits = 1;
     //cut speed
     speed_ratio = 0.5;
@@ -330,6 +350,7 @@ void panels()
     //if 5 seconds have passed
     if ((millis() - prev_hit_t) > 5000)
     {
+      //no hits
       hits = 0;
       //restore speed
       speed_ratio = 1.0;
