@@ -101,9 +101,7 @@ void setup()
 {
   //Fix potential manufacturing defect on Sparkfun USB Hub:
   pinMode( 7, OUTPUT );
-  digitalWrite( 7, HIGH );
-
-  Serial.begin(9600);
+  digitalWrite( 7, HIGH );  
 
   //Halt if usb hasn't started
   if(usb.Init() == -1)
@@ -274,23 +272,23 @@ void weapons()
   if(ps4.getButtonClick(SQUARE))
   {
     //to fire -> 60-90
-    servo_driver.setPWM(0,0,SERVOMAX);
+    servo_driver.setPWM(0,0,pulse_up);
     left_servo_last_t = millis();
   }
   if((millis() - left_servo_last_t ) > 1000)
   {
-    servo_driver.setPWM(0,0,SERVOMIN);
+    servo_driver.setPWM(0,0,pulse_down);
   }
   //if circle -> shoot left cannon
   if(ps4.getButtonClick(CIRCLE))
   {
     //to fire -> 60-90
-    servo_driver.setPWM(1,0,SERVOMAX);
+    servo_driver.setPWM(1,0,pulse_down);
     right_servo_last_t = millis();
   }
   if((millis() - right_servo_last_t ) > 1000)
   {
-    servo_driver.setPWM(1,0,SERVOMIN);
+    servo_driver.setPWM(1,0,pulse_up);
   }
   //if triangle -> shoot laser for 1 second (use millis() timers), use flag
   if(ps4.getButtonClick(TRIANGLE))
@@ -303,6 +301,7 @@ void weapons()
   if (laser_is_on && (millis() - laser_start_t > 1000))
   {
     digitalWrite(pin_laser, LOW);
+    laser_is_on = false;
   }
   
   //if right_trigger -> laser on
@@ -313,7 +312,7 @@ void panels()
   //if panels is hit decrease speed
   if (digitalRead(pin_button))
   {
-	  hits = 1;
+    hits = 1;
     //cut speed
     speed_ratio = 0.5;
     //reset speeds
@@ -322,19 +321,18 @@ void panels()
     front_left->setSpeed(prev_left_speed*speed_ratio);
     back_left->setSpeed(prev_left_speed*speed_ratio);
     //reset time
-	  prev_hit_t = millis();
+    prev_hit_t = millis();
   }
   
   //if there are hits on the vehicle
   if (hits > 0)
   {
-	  //if 5 seconds have passed
-	  if ((millis() - prev_hit_t) > 5000)
-	  {
-      Serial.println("Speed restored");
-		  hits = 0;
+    //if 5 seconds have passed
+    if ((millis() - prev_hit_t) > 5000)
+    {
+      hits = 0;
       //restore speed
       speed_ratio = 1.0;
-	  }
+    }
   }
 }
