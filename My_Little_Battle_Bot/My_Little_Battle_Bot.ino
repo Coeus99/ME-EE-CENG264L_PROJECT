@@ -65,8 +65,8 @@ void panels();
 /**
  * Flags
  */
-bool left_idle = true;
-bool right_idle =true;
+bool left_idle = false;
+bool right_idle = false;
 bool left_max = false;
 bool right_max = false;
 
@@ -139,20 +139,21 @@ void locomotion()
 
   left_y = ps4.getAnalogHat(LeftHatY);
   right_y = ps4.getAnalogHat(RightHatY);
-
+  
   //left side
-  if(117 < left_y < 137)
+  if(117 < left_y && left_y < 137)
   {
     if(!left_idle)
     {
       left_idle = true;
       left_max = false;
       left_speed = 0;
+      prev_left_y = 128;
       front_left->run(RELEASE);
       back_left->run(RELEASE);
     }
   }
-  else if(left_y > 250)
+  else if(left_y < 10)
   {
     if(!left_max)
     {
@@ -161,15 +162,11 @@ void locomotion()
       left_speed = 255;
       front_left->setSpeed(left_speed*speed_ratio);
       back_left->setSpeed(left_speed*speed_ratio);
-      if (left_y > 250)
+      prev_left_y = 0;
+      if (left_y < 5)
       {
         front_left->run(FORWARD);
         back_left->run(FORWARD);
-      }
-      else
-      {
-        front_left->run(BACKWARD);
-        back_left->run(BACKWARD);
       }
     }
   }
@@ -195,39 +192,36 @@ void locomotion()
 	    front_left->run(FORWARD);
       back_left->run(FORWARD);
     }
+    prev_left_y = left_y;
   }
-  prev_left_y = left_y;
 
   //right side
-  if(117 < right_y < 137)
+  if(117 < right_y && right_y < 137)
   {
     if(!right_idle)
     {
       right_idle = true;
       right_max = false;
       right_speed = 0;
+      prev_right_y = 128;
       front_right->run(RELEASE);
       back_right->run(RELEASE);
     }
   }
-  else if(right_y > 250)
+  else if(right_y < 10)
   {
     if(!right_max)
     {
       right_max = true;
       right_idle = false;
       right_speed = 255;
+      prev_right_y = 0;
       front_right->setSpeed(right_speed*speed_ratio);
       back_right->setSpeed(right_speed*speed_ratio);
-      if (right_y > 250)
+      if (right_y < 5)
       {
         front_right->run(FORWARD);
         back_right->run(FORWARD);
-      }
-      else
-      {
-        front_right->run(BACKWARD);
-        back_right->run(BACKWARD);
       }
     }
   }
@@ -253,8 +247,8 @@ void locomotion()
 	    front_right->run(FORWARD);
       back_right->run(FORWARD);
     }
+    prev_right_y = right_y;
   }
-  prev_right_y = right_y;
 }
 
 void weapons()
