@@ -19,8 +19,8 @@
 #include <Adafruit_PWMServoDriver.h>
 #define SERVOMIN 200//don't remember what was said in class
 #define SERVOMAX 400//don't remember what was said in class
-const uint8_t min_position = 60;
-const uint8_t max_position = 90;
+const uint8_t min_position = 0;
+const uint8_t max_position = 100;
 Adafruit_PWMServoDriver servo_driver = Adafruit_PWMServoDriver();
 
 //Motors
@@ -75,26 +75,35 @@ bool right_max = false;
  */
 uint8_t prev_right_y = 0;
 uint8_t prev_left_y = 0;
+uint8_t prev_right_speed;
+uint8_t prev_left_speed;
 
 /**
  * Panels
  */
 uint8_t hits = 0;
-int prev_hit_t;
+unsigned long long int prev_hit_t;
 float speed_ratio = 1.0;
 
 /**
  * Laser
  */ 
 bool laser_is_on = false;
-int laser_start_t;
- 
+unsigned long long int laser_start_t;
+
+/**
+ * Cannons
+ */
+unsigned long long int right_servo_last_t;
+unsigned long long int left_servo_last_t;
 
 void setup()
 {
   //Fix potential manufacturing defect on Sparkfun USB Hub:
   pinMode( 7, OUTPUT );
   digitalWrite( 7, HIGH );
+
+  Serial.begin(9600);
 
   //Halt if usb hasn't started
   if(usb.Init() == -1)
@@ -148,6 +157,7 @@ void locomotion()
       left_idle = true;
       left_max = false;
       left_speed = 0;
+      prev_left_speed = 0;
       prev_left_y = 128;
       front_left->run(RELEASE);
       back_left->run(RELEASE);
@@ -160,6 +170,7 @@ void locomotion()
       left_max = true;
       left_idle = false;
       left_speed = 255;
+      prev_left_speed = 255;
       front_left->setSpeed(left_speed*speed_ratio);
       back_left->setSpeed(left_speed*speed_ratio);
       prev_left_y = 0;
@@ -193,8 +204,9 @@ void locomotion()
       back_left->run(FORWARD);
     }
     prev_left_y = left_y;
+    prev_left_speed = left_speed;
   }
-
+  prev_left_speed = left_speed;
   //right side
   if(117 < right_y && right_y < 137)
   {
@@ -203,6 +215,7 @@ void locomotion()
       right_idle = true;
       right_max = false;
       right_speed = 0;
+      prev_right_speed = 0;
       prev_right_y = 128;
       front_right->run(RELEASE);
       back_right->run(RELEASE);
@@ -215,6 +228,7 @@ void locomotion()
       right_max = true;
       right_idle = false;
       right_speed = 255;
+      prev_right_speed = 255;
       prev_right_y = 0;
       front_right->setSpeed(right_speed*speed_ratio);
       back_right->setSpeed(right_speed*speed_ratio);
@@ -248,22 +262,35 @@ void locomotion()
       back_right->run(FORWARD);
     }
     prev_right_y = right_y;
+    prev_right_speed = right_speed;
   }
 }
 
 void weapons()
 {
+  uint8_t pulse_up = map(30, min_position, max_position, SERVOMIN, SERVOMAX);
+  uint8_t pulse_down = map(0, min_position, max_position, SERVOMIN, SERVOMAX);
   //if square -> shoot left cannon
   if(ps4.getButtonClick(SQUARE))
   {
     //to fire -> 60-90
-    //to load -> 90-60
+    servo_driver.setPWM(0,0,SERVOMAX);
+    left_servo_last_t = millis();
+  }
+  if((millis() - left_servo_last_t ) > 1000)
+  {
+    servo_driver.setPWM(0,0,SERVOMIN);
   }
   //if circle -> shoot left cannon
   if(ps4.getButtonClick(CIRCLE))
   {
     //to fire -> 60-90
-    //to load -> 90-60
+    servo_driver.setPWM(1,0,SERVOMAX);
+    right_servo_last_t = millis();
+  }
+  if((millis() - right_servo_last_t ) > 1000)
+  {
+    servo_driver.setPWM(1,0,SERVOMIN);
   }
   //if triangle -> shoot laser for 1 second (use millis() timers), use flag
   if(ps4.getButtonClick(TRIANGLE))
@@ -273,7 +300,7 @@ void weapons()
     digitalWrite(pin_laser, LOW);
   }
   //turn laser off if necessary
-  if (laser_is_on && (laser_start_t - millis() > 1000))
+  if (laser_is_on && (millis() - laser_start_t > 1000))
   {
     digitalWrite(pin_laser, LOW);
   }
@@ -286,19 +313,16 @@ void panels()
   //if panels is hit decrease speed
   if (digitalRead(pin_button))
   {
-	  switch (++hits)
-	  {
-		  case 1:
-		    //do 50% speed reduction
-			  speed_ratio = 0.5;
-			  break;
-		  case 2:
-		    //do 100% speed reduction
-			  speed_ratio = 0.0;
-		    break;
-	  }
+	  hits = 1;
+    //cut speed
+    speed_ratio = 0.5;
+    //reset speeds
+    front_right->setSpeed(prev_right_speed*speed_ratio);
+    back_right->setSpeed(prev_right_speed*speed_ratio);
+    front_left->setSpeed(prev_left_speed*speed_ratio);
+    back_left->setSpeed(prev_left_speed*speed_ratio);
+    //reset time
 	  prev_hit_t = millis();
-	  //reset timer
   }
   
   //if there are hits on the vehicle
@@ -307,18 +331,10 @@ void panels()
 	  //if 5 seconds have passed
 	  if ((millis() - prev_hit_t) > 5000)
 	  {
-		  switch (--hits)
-		  {
-		     case 0:
-			   //restore speed to 100%
-			   speed_ratio = 1.0;
-			   break;
-			 case 1:
-			   //restore speed to 50%
-			   speed_ratio = 0.5;
-			   break;
-		  }
-		  
+      Serial.println("Speed restored");
+		  hits = 0;
+      //restore speed
+      speed_ratio = 1.0;
 	  }
   }
 }
