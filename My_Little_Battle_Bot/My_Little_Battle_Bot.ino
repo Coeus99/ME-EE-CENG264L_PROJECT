@@ -117,8 +117,8 @@ void setup()
   servo_driver.setPWMFreq(60);
 
   //set to default values
-  servo_driver.setPWM(0,0,SERVOMAX);
-  servo_driver.setPWM(1,0,SERVOMIN);
+  servo_driver.setPWM(0,0,300);
+  servo_driver.setPWM(1,0,375);
   
   //set button as input
   pinMode(pin_button, INPUT);
@@ -126,6 +126,9 @@ void setup()
   //set laser as output
   pinMode(pin_laser, OUTPUT);
   digitalWrite(pin_laser,LOW);
+
+  //delete me
+  Serial.begin(9600);
 }
 
 void loop()
@@ -279,23 +282,24 @@ void locomotion()
 void weapons()
 {
   //servo pulse information
-  uint8_t fire = map(30,min_position, max_position, SERVOMIN, SERVOMAX);
 
   //square shoots left cannon
   if(ps4.getButtonClick(SQUARE))
   {
     if (!left_fired)
     {
+      Serial.println("Firing");
       //to fire turn 30 degrees
       //(servo 0 should be on left side)
-      servo_driver.setPWM(0,0,SERVOMAX-fire);
+      servo_driver.setPWM(0,0,400);
       left_fired = true;
     }
     else
     {
+      Serial.println("Reloading");
       //reload, turn it back.
       left_fired = false;
-      servo_driver.setPWM(0,0,SERVOMAX);
+      servo_driver.setPWM(0,0,300);
     }
   }
 
@@ -306,14 +310,14 @@ void weapons()
     {
       //to fire turn 30 degrees
       //(servo 0 should be on left side)
-      servo_driver.setPWM(1,0,SERVOMIN+fire);
+      servo_driver.setPWM(1,0,250);
       right_fired = true;
     }
     else
     {
       //reload, turn it back.
       right_fired = false;
-      servo_driver.setPWM(1,0,SERVOMIN);
+      servo_driver.setPWM(1,0,375);
     }
   }
 
