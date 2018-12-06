@@ -94,14 +94,14 @@ unsigned long long int laser_start_t;
 /**
  * Cannons
  */
-unsigned long long int right_servo_last_t;
-unsigned long long int left_servo_last_t;
+bool left_fired = false;
+bool right_fired = false;
 
 void setup()
 {
   //Fix potential manufacturing defect on Sparkfun USB Hub:
   pinMode( 7, OUTPUT );
-  digitalWrite( 7, HIGH );  
+  digitalWrite( 7, HIGH );
 
   //Halt if usb hasn't started
   if(usb.Init() == -1)
@@ -115,6 +115,10 @@ void setup()
   //start servo driver
   servo_driver.begin();
   servo_driver.setPWMFreq(60);
+
+  //set to default values
+  int default_left_pos = map(5, 0, 100, SERVOMIN, SERVOMAX);
+  servo_driver.setPWM(0,0,default_left_pos);
   
   //set button as input
   pinMode(pin_button, INPUT);
@@ -275,32 +279,42 @@ void locomotion()
 void weapons()
 {
   //servo pulse information
-  uint8_t pulse_up = map(30, min_position, max_position, SERVOMIN, SERVOMAX);
-  uint8_t pulse_down = map(0, min_position, max_position, SERVOMIN, SERVOMAX);
+  uint8_t fire = map(30,min_position, max_position, SERVOMIN, SERVOMAX);
 
-  //square shoots right cannon
+  //square shoots left cannon
   if(ps4.getButtonClick(SQUARE))
   {
-    //to fire turn 30 degrees
-    //(servo 0 should be on left side)
-    servo_driver.setPWM(0,0,pulse_up);
-    left_servo_last_t = millis();
-  }
-  if((millis() - left_servo_last_t ) > 1000)
-  {
-    //reset servo after a second
-    servo_driver.setPWM(0,0,pulse_down);
+    if (!left_fired)
+    {
+      //to fire turn 30 degrees
+      //(servo 0 should be on left side)
+      servo_driver.setPWM(0,0,SERVOMAX-fire);
+      left_fired = true;
+    }
+    else
+    {
+      //reload, turn it back.
+      left_fired = false;
+      servo_driver.setPWM(0,0,SERVOMAX);
+    }
   }
 
-  //circle shoots left cannon
+  //circle shoots right cannon
   if(ps4.getButtonClick(CIRCLE))
   {
-    servo_driver.setPWM(1,0,pulse_down);
-    right_servo_last_t = millis();
-  }
-  if((millis() - right_servo_last_t ) > 1000)
-  {
-    servo_driver.setPWM(1,0,pulse_up);
+    if (!right_fired)
+    {
+      //to fire turn 30 degrees
+      //(servo 0 should be on left side)
+      servo_driver.setPWM(0,0,SERVOMIN+fire);
+      right_fired = true;
+    }
+    else
+    {
+      //reload, turn it back.
+      right_fired = false;
+      servo_driver.setPWM(0,0,SERVOMIN);
+    }
   }
 
   //triangle fires laser for a second
@@ -308,7 +322,7 @@ void weapons()
   {
     laser_is_on = true;
     laser_start_t = millis();
-    digitalWrite(pin_laser, LOW);
+    digitalWrite(pin_laser, HIGH);
   }
   //if laser has been on or a second, turn it off
   if (laser_is_on && (millis() - laser_start_t > 1000))
