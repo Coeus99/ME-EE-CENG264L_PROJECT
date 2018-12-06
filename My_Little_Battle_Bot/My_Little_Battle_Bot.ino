@@ -117,8 +117,8 @@ void setup()
   servo_driver.setPWMFreq(60);
 
   //set to default values
-  int default_left_pos = map(5, 0, 100, SERVOMIN, SERVOMAX);
-  servo_driver.setPWM(0,0,default_left_pos);
+  servo_driver.setPWM(0,0,SERVOMAX);
+  servo_driver.setPWM(1,0,SERVOMIN);
   
   //set button as input
   pinMode(pin_button, INPUT);
@@ -306,14 +306,14 @@ void weapons()
     {
       //to fire turn 30 degrees
       //(servo 0 should be on left side)
-      servo_driver.setPWM(0,0,SERVOMIN+fire);
+      servo_driver.setPWM(1,0,SERVOMIN+fire);
       right_fired = true;
     }
     else
     {
       //reload, turn it back.
       right_fired = false;
-      servo_driver.setPWM(0,0,SERVOMIN);
+      servo_driver.setPWM(1,0,SERVOMIN);
     }
   }
 
